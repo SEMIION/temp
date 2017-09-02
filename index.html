@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+<script type="text/javascript">
+	
+window.onload = function() {	
+	var ONLINE = false;
+	var inLobby = false;
+	var ok = false;
+	var userId, userIdInLobby, userInLobby;
+	var mUsers = [];
+	var arr1 = [];
+	var arr2 = [];
+	var mUsersInLobby = [arr1,arr2];
+	var mPasswords = [];
+	var mLobbys = [];
+	var countUsersInLobby = [];	
+	var login = document.getElementById("loginText");
+	var password = document.getElementById("passwordText");
+	var lobbyName = document.getElementById("lobbyNameText");
+	var btnSignIn = document.getElementById("buttonSignIn");
+	var btnReg = document.getElementById("buttonRegistration");
+	var btnCreateLobby = document.getElementById("buttonCreateLobby");	
+	var btnLogOut = document.getElementById("buttonLogOut");
+	var btnEnterLobby = document.getElementById("buttonEnterLobby");
+	var btnLeaveLobby = document.getElementById("buttonLeaveLobby");	
+	var label = document.getElementById("status");	
+	var socket = new WebSocket("ws://echo.websocket.org");
+	socket.onopen = function (event)
+	{
+	label.innerHTML = "соеденились";
+	}
+	
+	socket.onclose = function (event)
+	{
+		
+	}	
+	
+	socket.onmessage = function(event) {
+		if(typeof event.data === "string")
+		label.innerHTML = event.data;
+	}	
+	
+	document.getElementById("out").innerHTML = "";
+	
+	btnSignIn.onclick = function() {		
+			for (var i=0; i<mUsers.length; i++) {
+					if (login.value == mUsers[i] && password.value == mPasswords[i]){
+						alert("Hello " + login.value);
+						ok=true;
+						ONLINE = true;
+						userId=i;				
+					} 	
+			}
+			
+			document.getElementById("out").innerHTML = "";			
+			for (var i=0; i<mUsers.length; i++) {
+				if (mUsers[i] != null) {
+				document.getElementById("out").innerHTML += mUsers[i] + "<br>";
+				}
+			}
+			
+			if (ok == false)
+					{
+						alert("wrong login or password ");
+					}
+	};
+	
+	btnReg.onclick = function() {
+
+		
+		if (mUsers.length>0)
+		{			
+			for (var i=0; i<mUsers.length; i++) {
+			ok = false;		
+		
+				if (login.value == mUsers[i]){
+						alert("this login already exists");
+						ok=true;
+				}
+			}				
+				if (ok == false)
+				{
+						
+						mUsers[mUsers.length] = login.value;
+						mPasswords[mPasswords.length] = password.value;
+						alert("registration complete");
+				}			
+		} 
+		
+		if (mUsers.length==0)
+		{
+				mUsers[mUsers.length] = login.value;
+				mPasswords[mPasswords.length] = password.value;
+				alert("registration complete");				
+		}		
+	};
+	
+	btnLogOut.onclick = function() {
+		
+		var temp = mUsers[userId];
+		mUsers[userId] = null;							
+		document.getElementById("out").innerHTML = "";
+							
+		for (var i=0; i<mUsers.length; i++) {
+			if (mUsers[i] != null) {
+			document.getElementById("out").innerHTML += mUsers[i] + "<br>";
+			}
+		}
+							
+		mUsers[userId] = temp;
+	};
+	
+	btnLeaveLobby.onclick = function() {
+		var x = document.getElementById("mySelect");
+		var option = document.createElement("option");
+		userId = userIdInLobby;
+		
+		mUsers[userId]=mUsersInLobby[x.selectedIndex][userId];
+		
+		mUsersInLobby[x.selectedIndex][userId] = null;
+
+		document.getElementById("out").innerHTML = "";
+		document.getElementById("out2").innerHTML = "";
+						
+		for (var i=0; i<mUsers.length; i++) {
+			if (mUsersInLobby[x.selectedIndex][i] != null) {
+			document.getElementById("out2").innerHTML += mUsersInLobby[x.selectedIndex][i] + "<br>";
+			}
+		}
+							
+			for (var i=0; i<mUsers.length; i++) {
+			if (mUsers[i] != null) {
+			document.getElementById("out").innerHTML += mUsers[i] + "<br>";
+			}
+		}
+							
+		mUsers[userId] = userInLobby;
+							
+		inLobby = false;
+
+		countUsersInLobby[x.selectedIndex]--;
+		if(countUsersInLobby[x.selectedIndex] == 0)
+		{
+			var x = document.getElementById("mySelect");
+			x.remove(x.selectedIndex);
+		}
+	};
+	
+	btnCreateLobby.onclick = function() {
+	
+		if (ONLINE == false)
+		{
+			alert("please sign in");
+		}
+		
+		if (lobbyName.value == "" && ONLINE==true)
+		{
+			alert("please enter lobby name");
+		}		
+		
+		if (lobbyName.value != "" && ONLINE==true)
+		{
+			if (mLobbys.length>0)
+			{			
+				for (var i=0; i<mLobbys.length; i++) {
+				ok = false;		
+			
+						if (lobbyName.value == mLobbys[i]){
+							alert("this lobby already exists");
+							ok=true;
+						}
+				}
+				
+						if (ok == false)
+						{							
+							mLobbys[mLobbys.length] = login.value;							
+							
+							var x = document.getElementById("mySelect");
+							var option = document.createElement("option");
+							option.text = lobbyName.value;
+							x.add(option);	
+							
+							mUsersInLobby[mLobbys.length-1][userId]=mUsers[userId];
+							
+							userIdInLobby = userId;
+							userInLobby = mUsers[userId];
+							mUsers[userId] = null;
+							
+							document.getElementById("out").innerHTML = "";
+							document.getElementById("out2").innerHTML = "";
+							
+							for (var i=0; i<mUsers.length; i++) {
+								if (mUsersInLobby[mLobbys.length-1][i] != null) {
+								document.getElementById("out2").innerHTML += mUsersInLobby[mLobbys.length-1][i] + "<br>";
+								}
+							}
+							
+							for (var i=0; i<mUsers.length; i++) {
+								if (mUsers[i] != null) {
+								document.getElementById("out").innerHTML += mUsers[i] + "<br>";
+								}
+							}							
+							inLobby = true;
+							alert("lobby created");
+
+							countUsersInLobby[x.selectedIndex] = 1;
+						}		
+			} 
+			
+			if (mLobbys.length==0)
+			{
+					mLobbys[mLobbys.length] = lobbyName.value;	
+					
+					var x = document.getElementById("mySelect");
+					var option = document.createElement("option");
+					option.text = lobbyName.value;
+					x.add(option);					
+					document.getElementById("out2").innerHTML = "";					
+					mUsersInLobby[x.selectedIndex][userId]=mUsers[userId];
+					
+					for (var i=0; i<mUsers.length; i++) {
+						if (mUsersInLobby[x.selectedIndex][i] != null) {
+						document.getElementById("out2").innerHTML += mUsersInLobby[x.selectedIndex][i] + "<br>";
+						}
+					}
+					
+					userIdInLobby = userId;
+					userInLobby = mUsers[userId];							
+					mUsers[userId] = null;					
+					document.getElementById("out").innerHTML = "";
+					for (var i=0; i<mUsers.length; i++) {
+						if (mUsers[i] != null) {
+						document.getElementById("out").innerHTML += mUsers[i] + "<br>";
+						}
+					}
+					inLobby = true;
+					alert("lobby created");
+					countUsersInLobby[x.selectedIndex] = 1;
+			}			
+		}		
+	};	
+	
+	btnEnterLobby.onclick = function() {
+		
+		var x = document.getElementById("mySelect");
+		var option = document.createElement("option");
+		
+		mUsersInLobby[x.selectedIndex][userId]=mUsers[userId];
+		document.getElementById("out2").innerHTML = "";
+		document.getElementById("out2").innerHTML += mUsersInLobby[x.selectedIndex][userId] + "<br>";
+							
+		userIdInLobby = userId;
+		userInLobby = mUsers[userId];
+		mUsers[userId] = null;
+							
+		document.getElementById("out").innerHTML = "";
+		document.getElementById("out2").innerHTML = "";
+							
+		for (var i=0; i<mUsers.length; i++) {
+			if (mUsersInLobby[x.selectedIndex][i] != null) {
+			document.getElementById("out2").innerHTML += mUsersInLobby[x.selectedIndex][i] + "<br>";
+			}
+		}
+							
+		for (var i=0; i<mUsers.length; i++) {
+			if (mUsers[i] != null) {
+			document.getElementById("out").innerHTML += mUsers[i] + "<br>";
+			}
+		}
+		inLobby = true;
+		countUsersInLobby[x.selectedIndex]++;
+	};
+}
+	  
+</script>  
+</head>
+
+<body>  
+  <table align="center" border="1" width="30%">
+   <tr>
+    <td>
+	
+		<table border="0" >
+				<tr>
+					<td><input type="text" id="loginText" placeholder="LOGIN"></td>	
+					<td width="5%" align="right"><input type="button" id="buttonSignIn" value="sign in"></td>
+										
+				</tr>				
+				
+				<tr>
+					<td><input type="password" id="passwordText" placeholder="PASSWORD"></td>
+					<td><input type="button" id="buttonRegistration" value="registration"></td>
+					
+				</tr>				
+		</table>	
+	</td>	
+    <td width="50%">
+		<table border="0">
+		
+			<td><input type="text" id="lobbyNameText" placeholder="Enter lobby name"></td>
+			<td width="5%" align="right"><input type="button" id="buttonCreateLobby" value="create lobby"></td>
+				
+			
+			<tr>
+				<td align="right"><input type="button" id="buttonEnterLobby" value="enter in lobby"></td>
+				<td>
+					  <form>
+						  <select id="mySelect" size="1">
+							
+						  </select>
+						</form>
+				</td>
+			</tr>
+		</table>	
+	</td>	
+   </tr>
+</table>
+   
+  
+   
+    <table align="center" border="1" width="30%">
+   
+   
+   
+				<tr>
+					<td width="40%" align="center">users online:</td>
+					<td width="10%" align="right"><input type="button" id="buttonLogOut" value="log out"></td>
+					<td width="35%" align="center">users in lobby:</td>
+					<td width="15%" align="right"><input type="button" id="buttonLeaveLobby" value="leave lobby"></td>
+				</tr>
+				
+				<tr>
+				<td colspan = "2"><p id="out"></p></td>
+				<td colspan = "2"><p id="out2"></p></td>
+				</tr>
+				
+
+	</table>
+ 
+</body>
+</html>
